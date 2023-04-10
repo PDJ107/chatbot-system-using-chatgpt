@@ -4,3 +4,6 @@
 [submodule "Server/api-server"]
 	path = Server/api-server
 	url = https://github.com/PDJ107/2023-chatbot-api-server.git
+[submodule "Data"]
+	path = Data
+	url = https://github.com/oheunsoll/chatbot.git
