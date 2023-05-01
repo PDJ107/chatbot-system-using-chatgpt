@@ -1,9 +1,9 @@
 [submodule "App"]
 	path = App
 	url = https://github.com/KJ-yong/Koreatech-Chat-bot
-[submodule "Server/api-server"]
-	path = Server/api-server
-	url = https://github.com/PDJ107/2023-chatbot-api-server.git
 [submodule "Data"]
 	path = Data
 	url = https://github.com/oheunsoll/chatbot.git
+[submodule "Server"]
+	path = Server
+	url = https://github.com/PDJ107/2023-chatbot-api-server.git
