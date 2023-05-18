@@ -13,7 +13,7 @@ class ES:
 
         pprint(self.es.info().body)
 
-    def getContext(self, query, size=3):
+    def get_context(self, query, size=3):
         return self.es.search(index='context-v1',
                               query={
                                   'multi_match': {
