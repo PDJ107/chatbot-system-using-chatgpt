@@ -1,6 +1,7 @@
 import configparser
 from elasticsearch import Elasticsearch
 from pprint import pprint
+import json
 
 
 class ES:
@@ -8,23 +9,28 @@ class ES:
         config = configparser.ConfigParser()
         config.read(config_path)
 
-        self.es = Elasticsearch(config['ES']['URL'], request_timeout=60*1)
+        self.es = Elasticsearch(config['ES']['URL'], request_timeout=60 * 1)
         self.index = config['ES']['INDEX']
 
         pprint(self.es.info().body)
 
-    def get_context(self, query, size=3):
-        return self.es.search(index='context-v1',
+    def get_context(self, query, index=None, k=3):
+        index = self.index if index is None else index
+        return self.es.search(index=index,
                               query={
                                   'multi_match': {
                                       'query': query,
                                       'fields': ['*']
                                   }
                               },
-                              size=size).body
+                              size=k).body
+
+    def input_data(self, contexts, index):
+        for context in contexts:
+            self.es.index(index=index, document=context)
 
 
 if __name__ == '__main__':
     retriever = ES('../config.ini')
-    pprint(retriever.getContext('한기대 개교일은?', 1))
+    pprint(retriever.get_context('한기대 개교일은?', k=1))
 
