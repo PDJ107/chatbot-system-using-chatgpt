@@ -13,6 +13,7 @@ class ChatGPT:
         # self.pre_prompt = config['OPENAI']['PRE_PROMPT']
         # self.post_prompt = config['OPENAI']['POST_PROMPT']
         self.prompt = config['OPENAI']['PROMPT']
+        self.system_prompt = config['OPENAI']['INIT_SYSTEM']
         self.compress_prompt = config['OPENAI']['COMPRESS_PROMPT']
 
     def answering_the_question(
@@ -29,7 +30,7 @@ class ChatGPT:
     ):
         try:
             assert history[0]['role'] == 'system'
-
+            history[0] = eval(self.system_prompt)
             history[0]['content'] = history[0]['content'].replace('{prompt}', self.prompt)
             history[0]['content'] = history[0]['content'].replace('{context}', contexts)
 

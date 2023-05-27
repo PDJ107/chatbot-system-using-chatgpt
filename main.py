@@ -3,16 +3,27 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from retriever.es import ES
+from retriever.retriever import Retriever
 from reader.chatgpt import ChatGPT
+from reader.reader import Reader
+
+
+class Question(BaseModel):
+    question: str
+    user_id: str
 
 
 class Request(BaseModel):
-    question: str
+    user_id: str
 
 
 app = FastAPI()
-retriever = ES()
-reader = ChatGPT()
+
+es = ES()
+chatgpt = ChatGPT()
+
+reader = Reader(es, chatgpt)
+retriever = Retriever(es, chatgpt)
 
 
 @app.get("/")
@@ -21,17 +32,21 @@ def read_root():
 
 
 @app.post("/chatbot")
-def get_answer(request: Request):
-    context = '\n---\n'.join(
-        retriever.get_context(
-            query=request.question
-        )
+def get_answer(request: Question):
+    context = retriever.get_context(
+        question=request.question
     )
-    answer = reader.answer_question(
+    answer = reader.answering_the_question(
+        request.user_id,
         question=request.question,
-        context=context
+        contexts=context
     )
     return {'answer': answer}
+
+
+@app.post("/chatbot/init")
+def init_context(request: Request):
+    es.init_history(request.user_id)
 
 
 if __name__ == '__main__':
