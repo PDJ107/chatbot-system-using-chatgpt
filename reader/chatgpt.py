@@ -10,8 +10,9 @@ class ChatGPT:
         openai.organization = config['OPENAI']['ORG']
         openai.api_key = config['OPENAI']['API_KEY']
 
-        self.pre_prompt = config['OPENAI']['PRE_PROMPT']
-        self.post_prompt = config['OPENAI']['POST_PROMPT']
+        # self.pre_prompt = config['OPENAI']['PRE_PROMPT']
+        # self.post_prompt = config['OPENAI']['POST_PROMPT']
+        self.prompt = config['OPENAI']['PROMPT']
         self.compress_prompt = config['OPENAI']['COMPRESS_PROMPT']
 
     def answering_the_question(
@@ -29,7 +30,9 @@ class ChatGPT:
         try:
             assert history[0]['role'] == 'system'
 
+            history[0]['content'] = history[0]['content'].replace('{prompt}', self.prompt)
             history[0]['content'] = history[0]['content'].replace('{context}', contexts)
+
             request = [{
                 'role': 'user',
                 'content': question
@@ -59,7 +62,7 @@ class ChatGPT:
             print(e)
             return history, ''
 
-    def compress_context(self, context, max_len=256):
+    def compress_context(self, context, max_len=300):
         prompt = self.compress_prompt.replace('{length}', str(max_len))
 
         try:
@@ -89,7 +92,8 @@ if __name__ == '__main__':
     print(
         reader.answering_the_question(
             "너는 누구야?",
-            history
+            history,
+            debug=True
         )[1]
     )
 
