@@ -1,19 +1,26 @@
 import configparser
 from reader.chatgpt import ChatGPT
+from retriever.google_api import GoogleApi
+from retriever.es import ES
+
+from konlpy.tag import Mecab
 
 class Retriever:
-    def __init__(self, es, google_api, config_path='config.ini'):
+    def __init__(self, es: ES, chatgpt: ChatGPT, config_path='config.ini'):
         config = configparser.ConfigParser()
         config.read(config_path)
 
         self.es = es
-        self.google_api = google_api
+        self.chatgpt = chatgpt
+        self.google_api = GoogleApi(config_path)
+
+        self.mecab = Mecab()
+
         self.index = config['RETRIEVER']['INDEX']
 
-    def get_context(self, question, chatgpt: ChatGPT, max_len=256, k=2):
-        query = ' | '.join(
-            self.question_preprocessing(question)
-        )
+    def get_context(self, question, max_len=256, k=3):
+        query = self.question_preprocessing(question)
+        print('extract nouns: ', query)
 
         # elastic search
         contexts = self.es.get_context(query, self.index, k)
@@ -34,11 +41,18 @@ class Retriever:
         return contexts
 
     def question_preprocessing(self, question):
-        return question
+        query = []
+        for word, pos in self.mecab.pos(question):
+            for target in ['SN', 'N']:
+                if pos.startswith(target):
+                    query.append(word)
+                    break
+
+        return ' '.join(query)
 
     def context_postprocessing(self, contexts: list, max_len=1024):
-        contexts = '\n\n---\n\n'.join(contexts)
+        contexts = '\n---\n'.join(contexts)
         return contexts[:max_len]
 
-    def compress_context(self, context, chatgpt: ChatGPT):
-        return chatgpt.compress_context(context)
+    def compress_context(self, context):
+        return self.chatgpt.compress_context(context)
