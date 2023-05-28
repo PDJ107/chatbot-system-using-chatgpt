@@ -63,12 +63,15 @@ class ChatGPT:
             print(e)
             return history, ''
 
-    def compress_context(self, context, max_len=300):
-        prompt = self.compress_prompt.replace('{length}', str(max_len))
+    def compress_context(self, question, context, max_len=300):
+        prompt = self.compress_prompt
+        prompt = prompt.replace('{length}', str(max_len))
+        #prompt = prompt.replace('{question}', question)
+        prompt = prompt.replace('{context}', context)
 
         try:
             response = openai.Completion.create(
-                prompt=prompt + context,
+                prompt=prompt,
                 temperature=0,
                 max_tokens=512,
                 frequency_penalty=0,

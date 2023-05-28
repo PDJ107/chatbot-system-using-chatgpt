@@ -18,27 +18,27 @@ class Retriever:
 
         self.index = config['RETRIEVER']['INDEX']
 
-    def get_context(self, question, max_len=256, k=3):
+    def get_context(self, question, max_len=256, k=2):
         query = self.question_preprocessing(question)
         print('extract nouns: ', query)
 
+        contexts = []
+
         # elastic search
-        contexts = self.es.get_context(query, self.index, k)
+        contexts += self.es.get_context(query, self.index, k=k)
 
         # google api
-        # contexts.append(
-        #     self.google_api.get_context(question, size=1)
-        # )
-
+        contexts += self.google_api.get_context(question, size=k)
+        print(contexts)
         for i, context in [(i, c) for (i, c) in enumerate(contexts)]:
             if len(context) >= max_len:
-                contexts[i] = self.compress_context(context)
+                contexts[i] = self.chatgpt.compress_context(question, context[:1700], max_len)
 
-        contexts = self.context_postprocessing(
+        context = self.context_postprocessing(
             contexts
         )
-        print(contexts)
-        return contexts
+        print(context)
+        return context
 
     def question_preprocessing(self, question):
         query = []
@@ -54,5 +54,3 @@ class Retriever:
         contexts = '\n---\n'.join(contexts)
         return contexts[:max_len]
 
-    def compress_context(self, context):
-        return self.chatgpt.compress_context(context)
