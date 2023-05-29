@@ -6,7 +6,7 @@ import requests
 
 
 class GoogleApi:
-    def __init__(self, config_path='config.ini'):
+    def __init__(self, config_path='resources/config.ini'):
         config = configparser.ConfigParser()
         config.read(config_path)
 
@@ -16,8 +16,9 @@ class GoogleApi:
             "customsearch", "v1", developerKey=config['GOOGLE']['API_KEY']
         )
 
-    def get_context(self, query, size=1):
+    def get_context(self, query, size=1) -> (list, list):
         contexts = []
+        source = []
         try:
             items = (
                 self.service.cse()
@@ -36,12 +37,13 @@ class GoogleApi:
                 contexts.append(
                     self.get_html(items[i]['link'], items[i]['snippet'])
                 )
+                source.append(link)
 
-            return contexts
+            return contexts, source
 
         except Exception as e:
             print(type(e), e)
-            return contexts
+            return [], []
 
     def get_html(self, url, snippet, max_len=1600):
         hdr = {'User-Agent': 'Mozilla/5.0'}
@@ -74,5 +76,5 @@ class GoogleApi:
 
 
 if __name__ == '__main__':
-    google = GoogleApi('../config.ini')
+    google = GoogleApi('../resources/config.ini')
     print(google.get_context('chatgpt란?'))

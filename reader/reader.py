@@ -4,7 +4,7 @@ from retriever.es import ES
 
 
 class Reader:
-    def __init__(self, es: ES, chatgpt: ChatGPT, config_path='config.ini'):
+    def __init__(self, es: ES, chatgpt: ChatGPT, config_path='resources/config.ini'):
         config = configparser.ConfigParser()
         config.read(config_path)
 

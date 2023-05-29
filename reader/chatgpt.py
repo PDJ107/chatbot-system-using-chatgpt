@@ -3,7 +3,7 @@ import configparser
 
 
 class ChatGPT:
-    def __init__(self, config_path='config.ini'):
+    def __init__(self, config_path='resources/config.ini'):
         config = configparser.ConfigParser()
         config.read(config_path)
 
@@ -20,7 +20,7 @@ class ChatGPT:
             self,
             question: str,
             history: list,
-            contexts="",
+            contexts=None,
             model="gpt-3.5-turbo",
             max_len=1200,
             size="ada",
@@ -30,9 +30,12 @@ class ChatGPT:
     ):
         try:
             assert history[0]['role'] == 'system'
-            history[0] = eval(self.system_prompt)
-            history[0]['content'] = history[0]['content'].replace('{prompt}', self.prompt)
-            history[0]['content'] = history[0]['content'].replace('{context}', contexts)
+
+            # context switching
+            if contexts is not None:
+                history[0] = eval(self.system_prompt)
+                history[0]['content'] = history[0]['content'].replace('{prompt}', self.prompt)
+                history[0]['content'] = history[0]['content'].replace('{context}', contexts)
 
             request = [{
                 'role': 'user',
@@ -87,10 +90,10 @@ class ChatGPT:
 
 if __name__ == '__main__':
     config = configparser.ConfigParser()
-    config.read('../config.ini')
+    config.read('../resources/config.ini')
     history = eval(config['OPENAI']['INIT_MESSAGE'])
 
-    reader = ChatGPT('../config.ini')
+    reader = ChatGPT('../resources/config.ini')
 
     print('1. Answering')
     print(
