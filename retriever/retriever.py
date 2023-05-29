@@ -63,8 +63,8 @@ class Retriever:
     def question_preprocessing(self, question) -> list:
         query = []
         for word, pos in self.mecab.pos(question):
-            for target in ['SN', 'N']:
-                if pos.startswith(target):
+            for target in ['SN', 'NNG']:
+                if target in pos:
                     query.append(word)
                     break
 
