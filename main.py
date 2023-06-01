@@ -50,14 +50,19 @@ def finish_answer(user_id):
 
 def request_answer(request: Question):
     print("Question: ", request.question)
+    fcm = SpecificFCM(request.fcm_token)
     agent = Agent(
         client=es.get_client(),
         index_name=config['RETRIEVER']['INDEX'],
         memory_pickle=es.get_memory(request.user_id),
-        message_client=SpecificFCM(request.fcm_token)
+        message_client=fcm
     )
-    _, memory_pickle = agent.run(request.question)
-    es.update_memory(request.user_id, memory_pickle)  # update history
+    try:
+        _, memory_pickle = agent.run(request.question)
+        es.update_memory(request.user_id, memory_pickle)  # update history
+    except Exception:
+        fcm.send_message(config['OPENAI']['FAILED'])
+
     finish_answer(request.user_id)  # 답변 완료 알림
 
 

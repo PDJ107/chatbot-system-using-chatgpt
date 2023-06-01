@@ -4,7 +4,7 @@ from typing import List, Any
 
 
 class CustomRetriever(ElasticSearchBM25Retriever):
-    def __init__(self, client: Any, index_name: str, k=3):
+    def __init__(self, client: Any, index_name: str, k=2):
         super().__init__(client, index_name)
         self.k = k
 
