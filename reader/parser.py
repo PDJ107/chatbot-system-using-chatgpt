@@ -8,7 +8,7 @@ import re
 
 class CustomOutputParser(AgentOutputParser, extra=Extra.allow):
 
-    def __init__(self, message_client: SpecificFCM | None = None):
+    def __init__(self, message_client: SpecificFCM = None):
         super().__init__()
         self.message_client = message_client
 

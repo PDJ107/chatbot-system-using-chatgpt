@@ -15,7 +15,7 @@ import base64
 
 class Agent:
 
-    def __init__(self, client: Elasticsearch, index_name: str, memory_pickle: str, message_client: SpecificFCM | None = None, config_path='resources/config.ini'):
+    def __init__(self, client: Elasticsearch, index_name: str, memory_pickle: str, message_client: SpecificFCM = None, config_path='resources/config.ini'):
         config = configparser.ConfigParser()
         config.read(config_path)
         self.message_client = message_client
@@ -76,7 +76,8 @@ class Agent:
             return answer, base64.b64encode(pickle.dumps(self.agent_executor.memory)).decode('utf-8')
         except ValueError as e:
             print(e)
-            self.message_client.send_message(self.failed)
+            if self.message_client is not None:
+                self.message_client.send_message(self.failed)
             return self.failed, base64.b64encode(pickle.dumps(self.agent_executor.memory)).decode('utf-8')
 
 
