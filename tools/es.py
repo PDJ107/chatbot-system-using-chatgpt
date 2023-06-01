@@ -3,6 +3,7 @@ from elasticsearch import Elasticsearch, exceptions
 from dto.user.user import User
 from dacite import from_dict
 
+
 class ES:
     def __init__(self, config_path='resources/config.ini'):
         config = configparser.ConfigParser()
@@ -11,6 +12,9 @@ class ES:
         self.es = Elasticsearch(config['ES']['URL'], request_timeout=60 * 1)
         self.init_messages = eval(config['OPENAI']['INIT_MESSAGE'])
         self.init_user = eval(config['ES']['INIT_USER'])
+
+    def get_client(self):
+        return self.es
 
     def get_user(self, user_id) -> User:
 
@@ -52,36 +56,36 @@ class ES:
         source = [context['_source']['link'] for context in response['hits']['hits']]
         return context_list, list(set(source))
 
-    def get_history(self, user_id):
+    def get_memory(self, user_id) -> str:
 
         try:
-            return self.es.get(index='messages', id=user_id)['_source']['messages']
+            return self.es.get(index='memories', id=user_id)['_source']['memory']
 
         except exceptions.NotFoundError:
 
             print("Not Found")
-            return self.init_history(user_id)
+            return self.init_memory(user_id)
 
-    def update_history(self, user_id, messages):
+    def update_memory(self, user_id, memory_pickle: str):
         doc = {
-            'messages': messages
+            'memory': memory_pickle
         }
 
         try:
-            self.es.update(index='messages', id=user_id, doc=doc)
+            self.es.update(index='memories', id=user_id, doc=doc)
 
         except exceptions.NotFoundError:
 
             print("Not Found")
-            self.es.index(index='messages', id=user_id, document=doc)
+            self.es.index(index='memories', id=user_id, document=doc)
 
-    def init_history(self, user_id):
+    def init_memory(self, user_id) -> str:
         init_doc = {
-            'messages': self.init_messages
+            'memory': ''
         }
 
-        self.es.index(index='messages', id=user_id, document=init_doc)
-        return init_doc['messages']
+        self.es.index(index='memories', id=user_id, document=init_doc)
+        return ''
 
     def input_data(self, contexts: list, index: str):
         for context in contexts:

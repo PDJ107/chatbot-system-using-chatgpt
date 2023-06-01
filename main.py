@@ -2,15 +2,13 @@ import uvicorn
 from fastapi import FastAPI, BackgroundTasks
 import configparser
 from pydantic import BaseModel
-from retriever.es import ES
-from retriever.retriever import Retriever
-from reader.chatgpt import ChatGPT
-from reader.reader import Reader
-from fcm import Fcm
-from dataclasses import dataclass, asdict
+from agent import Agent
+from messages import SpecificFCM
+from tools.es import ES
 import requests
-import json
 from urllib.parse import urljoin
+import firebase_admin
+from firebase_admin import credentials
 
 
 class Question(BaseModel):
@@ -30,10 +28,12 @@ config.read('resources/config.ini')
 app = FastAPI()
 
 es = ES()
-chatgpt = ChatGPT()
-reader = Reader(es, chatgpt)
-retriever = Retriever(es, chatgpt)
-fcm = Fcm()
+cred = credentials.Certificate(config['FCM']['KEY_PATH'])
+firebase_admin.initialize_app(cred)
+#chatgpt = ChatGPT()
+#reader = Reader(es, chatgpt)
+#retriever = Retriever(es, chatgpt)
+#fcm = FCM()
 
 
 def finish_answer(user_id):
@@ -50,51 +50,28 @@ def finish_answer(user_id):
 
 def request_answer(request: Question):
     print("Question: ", request.question)
-    # 1. context switching 체크
-    user = es.get_user(request.user_id)
-    query, context_switching = retriever.check_context(request.question, user.user_id)
-
-    # 2. context 검색
-    if user.context is False or context_switching:
-        fcm.send_message('Context switching...', request.fcm_token)
-        contexts = retriever.get_context(
-            user,
-            query=query,
-            question=request.question
-        )
-        user.context = True
-        es.update_user(user.user_id, asdict(user))
-
-    else:
-        contexts = None
-
-    # 3. 답변 생성
-    fcm.send_message('답변 생성중...', request.fcm_token)
-    answer = reader.answering_the_question(
-        request.user_id,
-        question=request.question,
-        contexts=contexts
+    agent = Agent(
+        client=es.get_client(),
+        index_name=config['RETRIEVER']['INDEX'],
+        memory_pickle=es.get_memory(request.user_id),
+        message_client=SpecificFCM(request.fcm_token)
     )
-    fcm.send_message(answer, request.fcm_token)
+    _, memory_pickle = agent.run(request.question)
+    es.update_memory(request.user_id, memory_pickle)  # update history
+    finish_answer(request.user_id)  # 답변 완료 알림
 
-    # 4. 답변 완료 상태 업데이트
-    finish_answer(user.user_id)
 
-
-def request_init_context(request: Request):
-    es.init_history(request.user_id)
-    fcm.send_message('Context 초기화 완료', request.fcm_token)
-
-    # 답변 완료 상태 업데이트
-    finish_answer(request.user_id)
+def request_init_history(request: Request):
+    es.init_memory(request.user_id)
+    SpecificFCM(request.fcm_token).send_message('대화 기록 초기화 완료')
+    finish_answer(request.user_id)  # 답변 완료 알림
 
 
 def request_source(request: Request):
-    user = es.get_user(request.user_id)
-    fcm.send_message('\n'.join(user.context_source), request.fcm_token)
+    #user = es.get_user(request.user_id)
+    #fcm.send_message('\n'.join(user.context_source), request.fcm_token)
 
-    # 답변 완료 상태 업데이트
-    finish_answer(request.user_id)
+    finish_answer(request.user_id)  # 답변 완료 알림
 
 
 @app.get("/")
@@ -110,7 +87,7 @@ async def chat(request: Question, background_tasks: BackgroundTasks):
 
 @app.post("/chatbot/init", status_code=202)
 def init_context(request: Request, background_tasks: BackgroundTasks):
-    background_tasks.add_task(request_init_context, request)
+    background_tasks.add_task(request_init_history, request)
     return {"message": "초기화 요청 완료"}
 
 
