@@ -61,14 +61,14 @@ def request_answer(request: Question):
         _, memory_pickle = agent.run(request.question)
         es.update_memory(request.user_id, memory_pickle)  # update history
     except Exception:
-        fcm.send_message(config['OPENAI']['FAILED'])
+        fcm.send_message(config['OPENAI']['FAILED'], final=True)
 
     finish_answer(request.user_id)  # 답변 완료 알림
 
 
 def request_init_history(request: Request):
     es.init_memory(request.user_id)
-    SpecificFCM(request.fcm_token).send_message('대화 기록 초기화 완료')
+    SpecificFCM(request.fcm_token).send_message('대화 기록 초기화 완료', final=True)
     finish_answer(request.user_id)  # 답변 완료 알림
 
 

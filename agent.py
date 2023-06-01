@@ -72,12 +72,12 @@ class Agent:
         try:
             answer = self.agent_executor.run(query)
             if self.message_client is not None:
-                self.message_client.send_message(answer)
+                self.message_client.send_message(answer, final=True)
             return answer, base64.b64encode(pickle.dumps(self.agent_executor.memory)).decode('utf-8')
         except ValueError as e:
             print(e)
             if self.message_client is not None:
-                self.message_client.send_message(self.failed)
+                self.message_client.send_message(self.failed, final=True)
             return self.failed, base64.b64encode(pickle.dumps(self.agent_executor.memory)).decode('utf-8')
 
 
