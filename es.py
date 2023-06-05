@@ -96,6 +96,6 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('../resources/config.ini')
 
-    es = ES('../resources/config.ini')
+    es = ES('resources/config.ini')
     print(es.get_context('한기대 개교일', config['RETRIEVER']['INDEX'], k=1))
 

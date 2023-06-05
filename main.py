@@ -4,7 +4,7 @@ import configparser
 from pydantic import BaseModel
 from agent import Agent
 from messages import SpecificFCM
-from tools.es import ES
+from es import ES
 import requests
 from urllib.parse import urljoin
 import firebase_admin
