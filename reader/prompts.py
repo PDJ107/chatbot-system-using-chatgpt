@@ -1,6 +1,7 @@
 from langchain.prompts import StringPromptTemplate
 from langchain.agents import Tool
 from typing import List
+from datetime import datetime
 
 
 class CustomPromptTemplate(StringPromptTemplate):
@@ -17,4 +18,5 @@ class CustomPromptTemplate(StringPromptTemplate):
         kwargs["agent_scratchpad"] = thoughts
         kwargs["tools"] = "\n".join([f"{tool.name}: {tool.description}" for tool in self.tools])
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
+        kwargs["current_time"] = datetime.now()
         return self.template.format(**kwargs)
