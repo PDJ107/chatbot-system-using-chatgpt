@@ -48,14 +48,17 @@ def finish_answer(user_id):
     print(url, response)
 
 
-def request_answer(request: Question):
+def request_answer(request: Question, background_tasks: BackgroundTasks):
     print("Question: ", request.question)
     fcm = SpecificFCM(request.fcm_token)
     agent = Agent(
         client=es.get_client(),
         index_name=config['RETRIEVER']['INDEX'],
         memory_pickle=es.get_memory(request.user_id),
-        message_client=fcm
+        message_client=fcm,
+        portal_id=config['PORTAL']['ID'],
+        portal_pw=config['PORTAL']['PW'],
+        background_tasks=background_tasks
     )
     try:
         _, memory_pickle = agent.run(request.question)
@@ -86,7 +89,7 @@ def read_root():
 
 @app.post("/chatbot", status_code=202)
 async def chat(request: Question, background_tasks: BackgroundTasks):
-    background_tasks.add_task(request_answer, request)
+    background_tasks.add_task(request_answer, request, background_tasks)
     return {"message": "답변 요청 완료"}
 
 
