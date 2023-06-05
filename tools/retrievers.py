@@ -9,6 +9,11 @@ class CustomRetriever(ElasticSearchBM25Retriever):
         self.k = k
 
     def get_relevant_documents(self, query: str) -> List[Document]:
+        q = []
+        for qq in query.split(' '):
+            if qq not in ['한기대', '위치', '일정']:
+                q.append(qq)
+        query = ' '.join(q)
         query_dict = {"multi_match": {"query": query, "fields": ['*']}}
         res = self.client.search(index=self.index_name, query=query_dict, size=self.k)
 
