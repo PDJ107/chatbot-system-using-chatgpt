@@ -115,25 +115,3 @@ class Agent:
             if self.message_client is not None:
                 self.message_client.send_message(self.failed, final=True)
             return self.failed, base64.b64encode(pickle.dumps(self.agent_executor.memory)).decode('utf-8')
-
-
-if __name__ == '__main__':
-    config = configparser.ConfigParser()
-    config.read('resources/config.ini')
-
-    cred = credentials.Certificate(config['FCM']['KEY_PATH'])
-    firebase_admin.initialize_app(cred)
-
-    client = Elasticsearch(
-        config['ES']['URL'],
-        request_timeout=60*1
-    )
-    agent = Agent(
-        client,
-        config['RETRIEVER']['INDEX'],
-        message_client=SpecificFCM(config['FCM']['TEST_TOKEN']),
-        memory_pickle='',
-        portal_id=config['PORTAL']['ID'],
-        portal_pw=config['PORTAL']['PW']
-    )
-    agent.run("과제 정보를 가져와서 그 중 15장 퀴즈 마감 30분전에 메시지 보내줘.")
