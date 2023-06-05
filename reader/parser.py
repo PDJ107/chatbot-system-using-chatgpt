@@ -8,9 +8,10 @@ import re
 
 class CustomOutputParser(AgentOutputParser, extra=Extra.allow):
 
-    def __init__(self, message_client: SpecificFCM = None):
+    def __init__(self, tool_names: list, message_client: SpecificFCM = None):
         super().__init__()
         self.message_client = message_client
+        self.tool_names = tool_names
 
     def parse(self, llm_output: str) -> Union[AgentAction, AgentFinish]:
 
@@ -30,7 +31,7 @@ class CustomOutputParser(AgentOutputParser, extra=Extra.allow):
         action = match.group(1).strip()
         action_input = match.group(2)
 
-        if self.message_client is not None:
+        if action in self.tool_names and self.message_client is not None:
             self.message_client.send_message(
                 '\n'.join(["Action: "+action, "Action Input: "+action_input]),
                 debug=True
