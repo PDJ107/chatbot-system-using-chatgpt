@@ -1,13 +1,19 @@
+import configparser
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
-from langchain.tools import BaseTool
 from typing import Any
 
-class Assignment():
-    def __init__(self, portal_id: str, portal_pw: str):
+
+class Assignment:
+    def __init__(self, portal_id: str, portal_pw: str, config_path='../resources/config.ini'):
+        config = configparser.ConfigParser()
+        config.read(config_path)
+
         self.user_id = portal_id
         self.user_pw = portal_pw
+        self.login_url = config['PORTAL']['LOGIN_URL']
+        self.assignment_url = config['PORTAL']['ASSIGNMENT_URL']
 
     def run(
             self,
@@ -22,11 +28,11 @@ class Assignment():
             'anchor': ''
         }
 
-        login_url = 'https://tsso.koreatech.ac.kr/svc/tk/Login.do'
+        login_url = self.login_url
         try:
             with requests.Session() as s:
                 s.post(login_url, data=data, verify=False)
-                response = s.get('https://el2.koreatech.ac.kr/local/dashboard/course_activities.php')
+                response = s.get(self.assignment_url)
                 response.raise_for_status()
         except Exception:
             return ''
@@ -75,3 +81,13 @@ class Assignment():
 
         return ','.join([str(assignment) for assignment in assignments])
 
+
+if __name__ == '__main__':
+    config = configparser.ConfigParser()
+    config.read('../resources/config.ini')
+    assignment = Assignment(
+        portal_id=config['PORTAL']['ID'],
+        portal_pw=config['PORTAL']['PW']
+    )
+
+    print(assignment.run())
