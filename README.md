@@ -11,7 +11,7 @@ LLM 중 하나인 ChatGPT의 API와 Langchain을 활용하여 사용자와의 �
 #### 🙋🏻‍♂️ 멤버 구성
  - 박동주(팀장): 프로젝트 설계, 백엔드 서버 구축, chatbot 시스템 개발
  - [김재용](https://github.com/KJ-yong): 안드로이드 스튜디오를 이용한 챗봇 App 개발
- - [오은솔](https://github.com/oheunsoll): 대학 요람(PDF) 데이터 수집 모듈 개발
+ - [오은솔](https://github.com/oheunsoll): 데이터 수집 모듈 개발 및 프롬프트 작성
 
 #### 🖥️ 개발 환경
  - Apis: `Serp API`, `Google places API`, `ChatGPT API`
